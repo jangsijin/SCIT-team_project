@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="global.sesoc.gongja.dao.DiaryMapper">
+
+<insert id="insertDiary" parameterType="diary">
+insert into diary(
+num
+,id
+,title
+,detail
+,star
+<if test="image != null and image !=''">
+,image
+</if>
+,sentiment
+)values(
+diary_seq.nextval
+,#{id}
+,#{title}
+,#{detail}
+,#{star}
+<if test="image != null and image !=''">
+,#{image}
+</if>
+,#{sentiment}
+)
+</insert>
+
+<select id="diaryList" resultType="diary">
+select * from diary where code=0 order by inputdate
+</select>
+
+<select id="myDiaryList" parameterType="String" resultType="diary">
+select
+num
+,id
+,title
+,detail
+,star
+,image
+,to_char(inputdate, 'YYYY-MM-DD') inputdate 
+from diary where id=#{id} order by num desc
+</select>
+
+<select id="myDiary" parameterType="diary" resultType="diary">
+select
+num
+,id
+,title
+,detail
+,star
+,image
+,to_char(inputdate, 'YYYY-MM-DD') inputdate
+ from diary where id=#{id} and num=#{num}
+</select>
+
+<select id="diaryToday" parameterType="String" resultType="int">
+select count(*) from diary where TO_date(inputdate,'yy/mm/dd') = TO_date(sysdate,'yy/mm/dd') and id=#{id}
+</select>
+
+<update id="updateDiary" parameterType="diary">
+update diary
+set 
+id = #{id}
+,title = #{title}
+,detail = #{detail}
+,star = #{star}
+<if test="image != null and image !=''">
+,image = #{image}
+</if>
+where id = #{id} and num = #{num}
+</update>
+
+<update id="updateDiaryImg" parameterType="diary">
+update diary
+set 
+image = #{image}
+where id = #{id} and num = #{num}
+</update>
+
+<delete id="deleteDiary" parameterType="diary">
+delete from diary where num= #{num} and id = #{id}
+</delete>
+
+<select id="searchDiary" parameterType="diary" resultType="diary">
+select
+num
+from diary
+where TO_date(inputdate,'yy/mm/dd') = #{inputdate} and id = #{id}
+</select>
+
+<!-- 3번간의 별 평점 -->
+<select id="starCnt" parameterType="String" resultType="diary">
+select star, sentiment 
+from (select * from diary where id=#{id} order by num desc) 
+where rownum <![CDATA[<=]]>3
+</select>
+
+<!-- 그동안 추천한거 모아두기 -->
+<insert id="insertRecommend" parameterType="diary">
+insert into
+recommend(
+id
+,detail
+) values(
+#{id}
+,#{detail}
+)
+</insert>
+
+<!-- select -->
+<select id="selectRecommend" parameterType="String" resultType="diary">
+select
+id, detail, to_char(inputdate, 'YYYY-MM-DD') inputdate
+from recommend where id=#{id} order by inputdate desc
+</select>
+</mapper>

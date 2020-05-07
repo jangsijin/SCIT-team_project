@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="global.sesoc.gongja.dao.CalendarMapper">
+<insert id="insertCalendar" parameterType="calendar">
+insert into calendar(
+schedule_no,
+member_ID,
+title,
+contents,
+startDT,
+endDT,
+color
+)values
+(calendar_seq.nextval,
+#{member_ID},
+#{title},
+#{content},
+#{start},
+#{end},
+#{color}
+
+)
+</insert>
+<select id="calendarList" parameterType="calendar" resultType="calendar">
+select 
+schedule_no,
+member_ID,
+title,
+contents as content,
+startDT as "start",
+endDT as "end",
+color
+
+from calendar 
+where member_ID=#{member_ID}
+
+
+</select>
+
+<delete id="calendarDelete" parameterType="calendar">
+delete from 
+	calendar
+		where schedule_no = #{schedule_no} and
+		      member_ID=#{member_ID}
+					
+
+
+
+</delete>
+<update id="calendarUpdate" parameterType="calendar">
+update
+		calendar
+	set
+		schedule_no =#{schedule_no}
+	<if test="title!=null and title!='' ">
+		,title=#{title}
+	</if>	
+	<if test = "content!=null and content!=''">	
+		,contents=#{content}
+	</if>
+		,startDT=#{start}
+		,endDT=#{end}
+	where
+	 	schedule_no = #{schedule_no} and
+		      member_ID=#{member_ID}
+</update>
+
+<select id="todayList" parameterType="String" resultType="calendar">
+select member_id, title,schedule_no, contents as "content", substr(startDT, 12,5) as "start", substr(endDT, 12,5) as "end" 
+from calendar 
+where member_ID=#{member_ID} and substr(startDT, 1,10) =  TO_CHAR(SYSDATE, 'YYYY-MM-DD') and substr(endDT, 1,10) =  TO_CHAR(SYSDATE, 'YYYY-MM-DD') order by schedule_no
+</select>
+
+<select id="timeStudyToday" parameterType="String" resultType="calendar">
+select title, SUM((TO_DATE(endDT,'YYYY-MM-DD HH24:MI') -  TO_DATE(startDT, 'YYYY-MM-DD HH24:MI'))*24*60) as "total" from calendar 
+where member_id=#{member_id} 
+and substr(startDT, 1,10) =  TO_CHAR(SYSDATE, 'YYYY-MM-DD') 
+and substr(endDT, 1,10) =  TO_CHAR(SYSDATE, 'YYYY-MM-DD')
+group by title
+</select>
+
+<!-- 일주일간 날짜별 총 공부시간 -->
+<select id="weekTimeToal" parameterType="String" resultType="calendar">
+select substr(replace(substr(startDT, 1,10),'-','/'),6) as "start", sum((TO_DATE(endDT,'YYYY-MM-DD HH24:MI') -  TO_DATE(startDT, 'YYYY-MM-DD HH24:MI'))*24*60) as "total" from calendar 
+where member_id=#{member_id} 
+and substr(startDT, 1,10) >  TO_CHAR(SYSDATE-7, 'YYYY-MM-DD') 
+group by substr(startDT, 1,10) order by substr(startDT, 1,10)
+</select>
+
+</mapper>

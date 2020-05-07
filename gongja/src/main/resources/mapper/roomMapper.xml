@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="global.sesoc.gongja.dao.RoomMapper">
+
+<insert id="insertRoom" parameterType="room">
+insert into room(
+num
+,id
+,title
+,comments
+,goal
+)values(
+room_seq.nextval
+,#{id}
+,#{title}
+,#{comments}
+,#{goal}
+)
+<selectKey keyProperty="num" resultType="int" order="AFTER">
+SELECT room_seq.currval as num FROM DUAL
+</selectKey>
+</insert>
+
+<insert id="insertRoomMember" parameterType="room">
+insert into room_member(
+num
+,id
+,code
+)values(
+#{num}
+,#{id}
+,#{code}
+)
+</insert>
+
+<update id="updateRoomMember" parameterType="room">
+update room_member
+set
+code = #{code}
+where num = #{num} and id = #{id}
+</update>
+
+<delete id="deleteRoomMember" parameterType="room">
+delete from room_member
+where num = #{num} and id = #{id}
+</delete>
+
+<update id="updateRoom" parameterType="room">
+update room
+set
+title = #{title}
+,comments = #{comments}
+,goal = #{goal}
+,code = #{code}
+where num = #{num} and id = #{id}
+</update>
+
+<select id="roomMember" parameterType="room" resultType="room">
+select
+id
+from room_member
+where num = #{num} and code = #{code}
+</select>
+
+<select id="iMember" parameterType="room" resultType="String">
+select id
+from room_member
+where num = #{num} and id = #{id} and code = 1
+</select>
+
+<select id="myRoomList" parameterType="room" resultType="room">
+select r.num, r.title, r.id, r.goal, r.code, to_char(r.inputdate, 'YYYY-MM-DD') inputdate
+from room r, room_member m 
+where r.num = m.num and m.id=#{id} and m.code = #{code}
+</select>
+
+<select id="oneRoom" parameterType="int" resultType="room">
+select num, title, id, goal, comments, code, to_char(inputdate, 'YYYY-MM-DD') inputdate
+from room
+where num = #{num}
+</select>
+
+<delete id="deleteRoom" parameterType="room">
+delete room
+where id = #{id} and num = #{num}
+</delete>
+
+<!-- 전체 글 개수 (검색 필터링 후) -->
+<select id="getTotal" parameterType="string" resultType="int">
+	select 
+		count(*)
+	from 
+		room 
+	<if test="_parameter != null">
+	where 
+		title like '%' || #{searchText} || '%'
+	</if>
+</select>
+
+<!-- 현재 페이지 목록 (검색 필터링 후) -->
+<select id="listBoard" parameterType="string" resultType="room">
+	select
+		num 
+		,title
+		,id
+		,comments
+		,goal
+		,to_char(inputdate, 'YYYY-MM-DD') inputdate
+	from 
+		room
+	<if test="_parameter != null">
+	where 
+		title like '%' || #{searchText} || '%' and code = 0
+	</if>
+	order by num desc
+</select>
+
+</mapper>

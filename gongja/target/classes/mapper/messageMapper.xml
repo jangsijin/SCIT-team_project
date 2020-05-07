@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="global.sesoc.gongja.dao.MessageMapper">
+
+<insert id="insertMessage" parameterType="message">
+insert into message(
+num
+,sender
+,reader
+,detail
+) values(
+message_seq.nextval
+,#{sender}
+,#{reader}
+,#{detail}
+)
+</insert>
+
+<select id="readMessage" parameterType="String" resultType="message">
+select * from message
+where reader = #{id}
+</select>
+
+<select id="sendMessage" parameterType="String" resultType="message">
+select * from message
+where sender = #{id}
+</select>
+
+<delete id="deleteMessage" parameterType="String">
+delete from message
+where num = #{num}
+</delete>
+</mapper>

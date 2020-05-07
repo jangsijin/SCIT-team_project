@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="global.sesoc.gongja.dao.ClockMapper">
+
+<insert id="insertTime" parameterType="clock">
+insert into clock(
+num
+,title
+,id
+,startT
+,endT
+,total
+<if test="hcount != null and hcount !=''">
+,hcount
+</if>
+<if test="scount != null and scount !=''">
+,scount
+</if>
+)values(
+clock_seq.nextval
+,#{title}
+,#{id}
+,#{startT}
+,#{endT}
+,#{total}
+<if test="hcount != null and hcount !=''">
+,#{hcount}
+</if>
+<if test="scount != null and scount !=''">
+,#{scount}
+</if>
+)
+</insert>
+
+
+
+<select id="selectToday" parameterType="String" resultType="clock">
+select num, title, id, startT, endT, total, hcount, scount, to_char(inputdate, 'YYYY-MM-DD') inputdate
+from clock where TO_date(inputdate,'yy/mm/dd') = TO_date(sysdate,'yy/mm/dd') and id = #{id} order by num
+</select>
+
+<select id="realStudyToday" parameterType="String" resultType="clock">
+select title, sum(total) as "total" 
+from clock 
+where id=#{id} and TO_date(inputdate,'yy/mm/dd') = TO_date(sysdate,'yy/mm/dd') 
+group by title
+</select>
+
+<select id="memberTime" parameterType="int" resultType="clock">
+select c.id, sum(c.total) as "total"
+from clock c, room_member r 
+where r.num= #{num} and c.id = r.id and TO_date(c.inputdate,'yy/mm/dd') = TO_date(sysdate,'yy/mm/dd')  
+group by c.id 
+order by sum(c.total) desc
+</select>
+
+<!-- 하루에 시간대별 알람 횟수 -->
+<select id="dayAlarmCnt" parameterType="String" resultType="clock">
+select sum(hcount+scount) as hcount, title
+from clock
+where id=#{id} and TO_date(inputdate,'yy/mm/dd') = TO_date(sysdate,'yy/mm/dd') and hcount+scount > 0
+group by title
+</select>
+
+<!-- 일주일 공부시간 그래프 -->
+<select id="weekStudyTime" parameterType="String" resultType="clock">
+select substr(inputdate,4) as inputdate, total
+from(
+select TO_char(inputdate,'yy/mm/dd') as inputdate, sum(total) as total
+from clock
+where id = #{id}
+group by TO_char(inputdate,'yy/mm/dd')
+order by inputdate desc
+) where rownum <![CDATA[<=]]>7
+order by inputdate
+</select>
+
+<!-- 1년 공부시간 그래프 -->
+<select id="yearStudyTime" parameterType="String" resultType="clock">
+select inputdate, total
+from(
+select TO_char(ADD_MONTHS(inputdate,-1),'yyyy,mm,dd') as inputdate, sum(total) as total
+from clock
+where id = 'gongja'
+group by TO_char(ADD_MONTHS(inputdate,-1),'yyyy,mm,dd')
+order by inputdate desc
+)
+order by inputdate
+</select>
+
+<!-- 주간 공부 많이한 타이틀 -->
+<select id="weekTitle" parameterType="String" resultType="clock">
+SELECT title, sum(total) as "total" FROM clock WHERE id=#{id} and TO_CHAR(inputdate, 'YYYYMMDD') <![CDATA[>]]> TO_CHAR(SYSDATE-7,'YYYYMMDD') group by title order by sum(total) desc
+</select>
+
+<!-- 같은 년도 하루 평균 공부시간 -->
+<select id="birthAvg" parameterType="int" resultType="int">
+SELECT round(avg(sum(c.total))/7) as "total" FROM clock c, member m 
+WHERE m.birthdate = #{birthdate} and m.id = c.id and TO_CHAR(c.inputdate, 'YYYYMMDD') > TO_CHAR(SYSDATE-7,'YYYYMMDD') group by m.id order by sum(c.total) desc
+</select>
+
+<!-- 같은 년도 공부 많이 한 타이틀 -->
+<select id="birthTitle" parameterType="int" resultType="clock">
+SELECT c.title, sum(c.total) as "total" FROM clock c, member m 
+WHERE m.birthdate = #{birthdate} and m.id = c.id and TO_CHAR(c.inputdate, 'YYYYMMDD') > TO_CHAR(SYSDATE-7,'YYYYMMDD') group by c.title order by sum(c.total) desc
+</select>
+
+</mapper>

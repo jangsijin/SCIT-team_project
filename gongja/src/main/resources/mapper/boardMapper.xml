@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="global.sesoc.gongja.dao.BoardMapper">
+<insert id="insertBoard" parameterType="board">
+insert into board(
+num
+,room_num
+,id
+,title
+,detail
+<if test="code != null and code != ''">
+,code
+</if>
+<if test="originalfile != null and savedfile != null">
+, originalfile
+, savedfile
+</if>
+)values(
+board_seq.nextval
+,#{room_num}
+,#{id}
+,#{title}
+,#{detail}
+<if test="code != null and code != ''">
+,#{code}
+</if>
+<if test="originalfile != null and savedfile != null">
+, #{originalfile}
+, #{savedfile}
+</if>
+)
+</insert>
+
+<select id="boardList" parameterType="int" resultType="board">
+select room_num, num, id, title, code, to_char(inputdate, 'YYYY-MM-DD') inputdate
+from board
+	where room_num = #{room_num}
+order by num desc
+</select>
+
+<select id="boardList1" parameterType="board" resultType="board">
+select room_num, num, id, title, code, to_char(inputdate, 'YYYY-MM-DD') inputdate
+from board
+<if test="_parameter != null">
+	where 
+		title like '%' || #{title} || '%' and room_num = #{room_num}
+	</if>
+order by num desc
+</select>
+
+
+<select id="oneBoard" parameterType="board" resultType="board">
+select room_num, num, id, title, detail, code, to_char(inputdate, 'YYYY-MM-DD') inputdate, originalfile, savedfile
+from board
+where room_num = #{room_num} and num = #{num}
+</select>
+
+<update id="updateBoard" parameterType="board">
+update board set
+title = #{title}
+,detail = #{detail}
+,code = #{code}
+<if test="originalfile != null and savedfile != null">
+, originalfile = #{originalfile}
+, savedfile = #{savedfile}
+</if>
+where id = #{id} and num = #{num}
+</update>
+
+<delete id="deleteBoard" parameterType="board">
+delete from board
+where num = #{num} and id = #{id}
+</delete>
+</mapper>
